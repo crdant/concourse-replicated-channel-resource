@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/replicatedhq/concourse-replicated-channel-resource/internal/resource"
 )
 
 func main() {
@@ -10,11 +12,11 @@ func main() {
 	
 	switch command {
 	case "check":
-		check()
+		resource.Check()
 	case "in":
-		in()
+		resource.In()
 	case "out":
-		out()
+		resource.Out()
 	default:
 		panic("unknown command: " + command)
 	}

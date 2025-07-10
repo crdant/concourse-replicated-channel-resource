@@ -5,7 +5,7 @@ VERSION?=0.1.0
 DOCKER_REPO=ghcr.io/replicatedhq/concourse-replicated-channel-resource
 
 build:
-	CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -o $(BINARY_NAME) .
+	CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -o $(BINARY_NAME) ./cmd/concourse-replicated-channel-resource
 
 test:
 	go test -v ./...
@@ -14,7 +14,7 @@ clean:
 	rm -f $(BINARY_NAME)
 
 docker-build:
-	docker build -t $(DOCKER_REPO):$(VERSION) .
+	docker build -f build/Dockerfile -t $(DOCKER_REPO):$(VERSION) .
 	docker tag $(DOCKER_REPO):$(VERSION) $(DOCKER_REPO):latest
 
 docker-push:
