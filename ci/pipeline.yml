@@ -1,0 +1,151 @@
+resources:
+  - name: repo
+    type: git
+    source:
+      uri: https://github.com/replicatedhq/concourse-replicated-channel-resource
+      branch: main
+
+  - name: image
+    type: registry-image
+    source:
+      repository: ghcr.io/replicatedhq/concourse-replicated-channel-resource
+      username: ((github-username))
+      password: ((github-token))
+
+  - name: version
+    type: semver
+    source:
+      driver: git
+      uri: https://github.com/replicatedhq/concourse-replicated-channel-resource
+      branch: version
+      file: version
+      username: ((github-username))
+      password: ((github-token))
+
+jobs:
+  - name: test
+    plan:
+      - get: repo
+        trigger: true
+      - task: test
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: golang
+              tag: "1.21"
+          inputs:
+            - name: repo
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                cd repo
+                go mod download
+                go test -v ./...
+                go build -o concourse-replicated-channel-resource .
+                
+  - name: build-and-push
+    plan:
+      - get: repo
+        passed: [test]
+        trigger: true
+      - get: version
+        params: {bump: patch}
+      - task: build-image
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: vito/oci-build-task
+          inputs:
+            - name: repo
+            - name: version
+          outputs:
+            - name: image
+          params:
+            CONTEXT: repo
+            BUILD_ARGS_FILE: version/version
+          run:
+            path: build
+      - put: image
+        params:
+          image: image/image.tar
+          additional_tags: version/version
+      - put: version
+        params: {file: version/version}
+        
+  - name: release
+    plan:
+      - get: repo
+        passed: [build-and-push]
+      - get: version
+        passed: [build-and-push]
+        trigger: true
+      - task: create-release
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: alpine/git
+          inputs:
+            - name: repo
+            - name: version
+          params:
+            GITHUB_TOKEN: ((github-token))
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                VERSION=$(cat version/version)
+                cd repo
+                
+                # Create release notes
+                cat > release-notes.md << EOF
+                # Release v${VERSION}
+                
+                ## Changes
+                - Automated release from commit $(git rev-parse --short HEAD)
+                
+                ## Docker Image
+                \`\`\`
+                docker pull ghcr.io/replicatedhq/concourse-replicated-channel-resource:${VERSION}
+                \`\`\`
+                
+                ## Concourse Resource Configuration
+                \`\`\`yaml
+                resource_types:
+                  - name: replicated-channel
+                    type: registry-image
+                    source:
+                      repository: ghcr.io/replicatedhq/concourse-replicated-channel-resource
+                      tag: ${VERSION}
+                
+                resources:
+                  - name: replicated-release
+                    type: replicated-channel
+                    source:
+                      api_token: ((replicated-api-token))
+                      app_id: ((replicated-app-id))
+                      channel: stable
+                \`\`\`
+                EOF
+                
+                # Create GitHub release
+                curl -X POST \
+                  -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{
+                    \"tag_name\": \"v${VERSION}\",
+                    \"name\": \"v${VERSION}\",
+                    \"body\": \"$(cat release-notes.md | jq -R -s .)\",
+                    \"draft\": false,
+                    \"prerelease\": false
+                  }" \
+                  "https://api.github.com/repos/replicatedhq/concourse-replicated-channel-resource/releases"

@@ -1,0 +1,23 @@
+contents:
+  packages:
+    - concourse-replicated-channel-resource
+
+entrypoint:
+  command: /opt/resource/check
+
+environment:
+  PATH: /usr/sbin:/sbin:/usr/bin:/bin
+
+accounts:
+  groups:
+    - groupname: nonroot
+      gid: 65532
+  users:
+    - username: nonroot
+      uid: 65532
+      gid: 65532
+  run-as: 65532
+
+archs:
+  - x86_64
+  - aarch64

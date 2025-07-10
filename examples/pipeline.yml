@@ -1,0 +1,55 @@
+resource_types:
+  - name: replicated-channel
+    type: registry-image
+    source:
+      repository: ghcr.io/replicatedhq/concourse-replicated-channel-resource
+      tag: latest
+
+resources:
+  - name: source-code
+    type: git
+    source:
+      uri: https://github.com/example/my-app
+      branch: main
+
+  - name: replicated-stable
+    type: replicated-channel
+    source:
+      api_token: ((replicated-api-token))
+      app_id: ((replicated-app-id))
+      channel: stable
+
+  - name: replicated-beta
+    type: replicated-channel
+    source:
+      api_token: ((replicated-api-token))
+      app_id: ((replicated-app-id))
+      channel: beta
+
+jobs:
+  - name: deploy-to-beta
+    plan:
+      - get: source-code
+        trigger: true
+      - put: replicated-beta
+        params:
+          release_yaml: source-code/manifests/release.yaml
+          release_notes: |
+            Automated beta release from commit: ((source-code.commit))
+            
+            Changes:
+            - Latest development changes
+          version: "((source-code.commit))"
+
+  - name: promote-to-stable
+    plan:
+      - get: source-code
+        passed: [deploy-to-beta]
+      - get: replicated-beta
+        passed: [deploy-to-beta]
+        trigger: true
+      - put: replicated-stable
+        params:
+          release_yaml: source-code/manifests/release.yaml
+          release_notes: source-code/CHANGELOG.md
+          version: "v1.0.0"
