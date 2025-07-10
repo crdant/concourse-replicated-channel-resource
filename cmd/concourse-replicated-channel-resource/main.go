@@ -9,7 +9,7 @@ import (
 
 func main() {
 	command := filepath.Base(os.Args[0])
-	
+
 	switch command {
 	case "check":
 		resource.Check()

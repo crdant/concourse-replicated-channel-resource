@@ -102,7 +102,7 @@ func (r *ReplicatedClient) GetRelease(ctx context.Context, appID, releaseSequenc
 	if err != nil {
 		return nil, fmt.Errorf("invalid release sequence: %w", err)
 	}
-	
+
 	// This is a simplified implementation
 	return &AppRelease{
 		Sequence:     sequence,

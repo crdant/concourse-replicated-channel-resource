@@ -1,12 +1,17 @@
 contents:
+  repositories:
+    - https://dl-cdn.alpinelinux.org/alpine/edge/main
+    - https://dl-cdn.alpinelinux.org/alpine/edge/community
   packages:
-    - concourse-replicated-channel-resource
+    - ca-certificates-bundle
 
 entrypoint:
-  command: /opt/resource/check
+  command: /usr/bin/concourse-replicated-channel-resource
 
 environment:
   PATH: /usr/sbin:/sbin:/usr/bin:/bin
+
+work-dir: /
 
 accounts:
   groups:
@@ -20,4 +25,10 @@ accounts:
 
 archs:
   - x86_64
-  - aarch64
+
+annotations:
+  org.opencontainers.image.title: "Concourse Replicated Channel Resource"
+  org.opencontainers.image.description: "Concourse resource for managing Replicated channels"
+  org.opencontainers.image.source: "https://github.com/replicatedhq/concourse-replicated-channel-resource"
+  org.opencontainers.image.vendor: "Replicated Inc."
+  org.opencontainers.image.licenses: "Apache-2.0"

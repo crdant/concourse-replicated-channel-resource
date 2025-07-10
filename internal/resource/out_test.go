@@ -16,7 +16,7 @@ func TestOutRequest_Validation(t *testing.T) {
 			Channel:  "stable",
 		},
 		Params: OutParams{
-			ReleaseYAML: "release.yaml",
+			ReleaseYAML:  "release.yaml",
 			ReleaseNotes: "Release notes for version 1.0.0",
 			Version:      "1.0.0",
 		},
