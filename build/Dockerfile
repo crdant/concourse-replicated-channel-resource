@@ -5,7 +5,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -o concourse-replicated-channel-resource .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -o concourse-replicated-channel-resource ./cmd/concourse-replicated-channel-resource
 
 FROM cgr.dev/chainguard/static:latest
 
