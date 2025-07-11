@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func TestCheckRequest_Valid(t *testing.T) {
 	req := CheckRequest{
 		Source: Source{
@@ -69,7 +68,7 @@ func TestOutRequest_Valid(t *testing.T) {
 			Channel:  "stable",
 		},
 		Params: OutParams{
-			ReleaseYAML: "release.yaml",
+			ReleaseYAML:  "release.yaml",
 			ReleaseNotes: "Release notes",
 			Version:      "1.0.0",
 		},

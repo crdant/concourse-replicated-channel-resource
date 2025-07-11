@@ -1,4 +1,4 @@
-# Local development build - uses current working directory files
+# Release build - uses git checkout for reproducible builds
 package:
   name: concourse-replicated-channel-resource
   version: 0.1.0
@@ -17,13 +17,27 @@ environment:
     packages:
       - busybox
       - ca-certificates-bundle
+      - go
 
 pipeline:
+  - uses: git-checkout
+    with:
+      repository: https://github.com/replicatedhq/concourse-replicated-channel-resource
+      branch: main
+      destination: concourse-replicated-channel-resource
+
+  - uses: go/build
+    with:
+      packages: ./cmd/concourse-replicated-channel-resource
+      output: concourse-replicated-channel-resource
+      ldflags: -s -w
+      modroot: concourse-replicated-channel-resource
+
   - uses: strip
 
   - runs: |
       mkdir -p ${{targets.destdir}}/usr/bin
-      cp bin/concourse-replicated-channel-resource ${{targets.destdir}}/usr/bin/concourse-replicated-channel-resource
+      cp concourse-replicated-channel-resource ${{targets.destdir}}/usr/bin/concourse-replicated-channel-resource
       chmod +x ${{targets.destdir}}/usr/bin/concourse-replicated-channel-resource
       
       # Create symlinks for concourse resource commands

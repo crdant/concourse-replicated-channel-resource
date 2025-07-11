@@ -30,8 +30,8 @@ Thumbs.db
 *.temp
 
 # Build artifacts
+bin/
 dist/
-build/
 
 # Release files
 release.yaml
